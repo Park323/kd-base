@@ -1,17 +1,17 @@
 # 1. DataLoader
 training_dataset_config:
-  root: 'data'
+  data_name: 'voxceleb'
+  root: 'data/voxceleb1_1_12'
   subset: 'training'
-  folder_in_archive: 'SpeechCommands_whole'
-  url: 'speech_commands_v0.02'
+  url: 'vrfy_split_debug.txt'
   ext: 'pt'
 train_loader_config:
   shuffle: True
 test_dataset_config:
-  root: 'data'
+  data_name: 'voxceleb'
+  root: 'data/voxceleb1_1_12'
   subset: 'validation'
-  folder_in_archive: 'SpeechCommands_whole'
-  url: 'speech_commands_v0.02'
+  url: 'valid_metadata.txt'
   ext: 'pt'
 test_loader_config:
   shuffle: False
@@ -21,14 +21,19 @@ num_workers: 8
 
 
 # 2. Model
-model: KeywordSpottingModule
+model: KnowledgeDistillation
 model_config:
-  input_dim: 768
-  num_classes: 35
-  head_type: 'white'
-  layer_ids: 1 12
+  cumbersome_model: HTSAT
+  cumbersome_config:
+    input_dim: 768
+    num_classes: 1211
+  small_model: TCResNet
+  small_config:
+    input_dim: 768
+    num_classes: 1211
 
 task_config:
+  metric: 'eer'
   sample_input_size: 10 40 768
 
 
@@ -40,7 +45,7 @@ optimizer_config:
 
 
 # 4. LossFunction
-loss: clip_ce
+loss: amsoftmax
 
 
 # 5. Scheduler
@@ -52,21 +57,21 @@ scheduler_config:
 
 
 # 6. Trainer
-default_root_dir: ./results/kws_avg
+default_root_dir: ./results/asv_avg_layer_12
 profiler: null #advanced
 max_epoch: 200
 devices: -1
 accelerator: cuda
-num_sanity_val_steps: -1
+num_sanity_val_steps: 2
 
 
 # 7. Checkpoint
-resume_checkpoint: null # "results/kws_avg/lightning_logs/version_17/checkpoints/AVG-SpeechCommandsV2-epoch=56-val_loss=0.43-val_ACC=89.03.ckpt"
+resume_checkpoint: null
 checkpoint_config:
   save_top_k: 5
-  monitor: "val_ACC"
-  mode: "max"
-  filename: "AVG-SpeechCommandsV2-{epoch:02d}-{val_loss:.2f}-{val_ACC:02.2f}"
+  monitor: "val_EER"
+  mode: "min"
+  filename: "AVG-SpeechCommandsV2-{epoch:02d}-{val_loss:.2f}-{val_EER:02.2f}"
 
 
 # 8. Random Seed

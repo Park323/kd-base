@@ -3,6 +3,15 @@ import torch
 from models.tasks.utils import vector_quantizer, _shrink
 
 
+def load_engine(engine_type:str, *args, **kwargs)->pl.LightningModule:
+    if engine_type:
+        Engine_cls = TrainEngine
+    elif True:
+        Engine_cls = TrainEngine
+    else:
+        raise NotImplementedError
+    return Engine_cls(*args, **kwargs)
+
 def acc_step(y_hat, y):
     correct = (y_hat.argmax(1) == y).type(torch.float).sum().item()
     size = y.shape[0]
@@ -69,7 +78,7 @@ MetricFuncs = dict(
 )
 
 
-class SpeechModel(pl.LightningModule):
+class TrainEngine(pl.LightningModule):
     def __init__(self, model, loss_function, optimizer, scheduler, metric='acc', method = 'conv_feature', **kwargs):
         super().__init__()
         # ⚡ model

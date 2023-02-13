@@ -13,7 +13,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.profiler import SimpleProfiler, AdvancedProfiler, PyTorchProfiler, XLAProfiler
 
-from engine import SpeechModel
+from engine import SpeechModel, load_engine
 
 PROFILERS = {
     "simple": SimpleProfiler,
@@ -47,7 +47,7 @@ def train(config):
         )
 
     # ⚡⚡ 2. Set 'Model', 'Loss', 'Optimizer', 'Scheduler'
-    model = importlib.import_module('models.tasks').__getattribute__(config['model'])
+    model = importlib.import_module('models').__getattribute__(config['model'])
     model =  model(**config['model_config'])
 
     optimizer = importlib.import_module("optimizer." + config['optimizer']).__getattribute__("Optimizer")
@@ -60,9 +60,9 @@ def train(config):
 
 
     # ⚡⚡  3. Set 'engine' for training/validation and 'Trainer' 
-    model = SpeechModel(model = model, optimizer=optimizer, loss_function=loss_function, scheduler=scheduler, **config.get('task_config', dict())) 
-
-
+    model = load_engine('engine_type', model = model, optimizer=optimizer, loss_function=loss_function, scheduler=scheduler, **config.get('task_config', dict()))
+    
+    
     # ⚡⚡ 4. Init callbacks
     checkpoint_callback = ModelCheckpoint(
         **config['checkpoint_config']
@@ -99,12 +99,12 @@ def train(config):
     # ⚡⚡ 6. Resume training
     if config['resume_checkpoint']  is not None:
         print("⚡")
-        trainer.fit(model, train_dataloader, test_dataloader, ckpt_path=config['resume_checkpoint'])
         print(config['resume_checkpoint'] + "are loaded")
+        trainer.fit(model, train_dataloader, test_dataloader, ckpt_path=config['resume_checkpoint'])
     else:
         print("⚡⚡")
-        trainer.fit(model, train_dataloader, test_dataloader)
         print("no pre-trained weight are loaded")
+        trainer.fit(model, train_dataloader, test_dataloader)
 
 
 def test():
