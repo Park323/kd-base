@@ -17,6 +17,7 @@ HASH_DIVIDER = "_nohash_"
 EXCEPT_FOLDER = "_background_noise_"
 DATA_LIST = [
     "speechcommands",
+    "esc50"
 ]
 
 # Keyword Spotting
@@ -76,15 +77,21 @@ class SpeechCommandDataset(torchaudio.datasets.SPEECHCOMMANDS):
 
 
 
-class ESC_Dataset(Dataset):
-    def __init__(self, audio_path, meta_data:str='./esc50.csv', fold:list=[1, 2, 3, 4, 5]):
-        self.meta_data = pd.read_csv(meta_data) # esc50.csv
+class ESC50(Dataset):
+    def __init__(self, root, fold:list=[1, 2, 3, 4, 5]):
+        self.root = root # data/esc_50
         self.fold = fold # [1, 2, 3, 4, 5]
-        self.audio_path = audio_path # .../esc-50/resample
 
+        # set resampled audio path
+        self.audio_path = os.path.join(self.root, 'resample')
+        sub_path = os.path.join('raw', 'ESC-50-master', 'meta', 'esc50.csv')
+
+        # set meta data
+        self.meta_data_path = os.path.join(self.root, sub_path)
+        self.meta_data = pd.read_csv(self.meta_data_path) # esc50.csv
+        
         # set dataset using the fold
         self.meta_data = self.meta_data.loc[self.meta_data['fold'].isin(self.fold)] 
-
         
         print(f"fold: {self.fold}")
         print(f"dataset length: {len(self.meta_data)}")
@@ -94,7 +101,7 @@ class ESC_Dataset(Dataset):
 
     def __getitem__(self, index):
         name = self.meta_data.loc[index, 'filename']
-        audio, sr = torchaudio.load(os.path.join(self.audio_path, name)) # 
+        audio, _ = torchaudio.load(os.path.join(self.audio_path, name)) # [1, audio_length]
         y = self.meta_data.loc[index, 'target']
 
         return audio, y
