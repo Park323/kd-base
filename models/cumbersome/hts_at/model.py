@@ -13,8 +13,8 @@ import random
 from numpy.core.fromnumeric import clip, reshape
 import torch
 import torch.nn as nn
-import torch.Tensor as Tensor
 import torch.utils.checkpoint as checkpoint
+from torch import Tensor
 
 from torchlibrosa.stft import Spectrogram, LogmelFilterBank
 from torchlibrosa.augmentation import SpecAugmentation
@@ -22,7 +22,7 @@ from torchlibrosa.augmentation import SpecAugmentation
 from itertools import repeat
 from typing import List, Union
 from .layers import PatchEmbed, Mlp, DropPath, trunc_normal_, to_2tuple
-from utils import do_mixup, interpolate
+from .utils import do_mixup, interpolate
 
 
 # below codes are based and referred from https://github.com/microsoft/Swin-Transformer
