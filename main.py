@@ -13,7 +13,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.profiler import SimpleProfiler, AdvancedProfiler, PyTorchProfiler, XLAProfiler
 
-from engine import SpeechModel, load_engine
+from engine import TrainEngine, load_engine
 
 PROFILERS = {
     "simple": SimpleProfiler,
@@ -39,7 +39,7 @@ def train(config):
 
     test_dataloader = DataLoader(
             dataset = test_dataset,
-            batch_size=config['batch_size'],
+            batch_size=1,
             num_workers=config['num_workers'],
             pin_memory=False,
             collate_fn=test_collate_fn,
