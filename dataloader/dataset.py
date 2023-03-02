@@ -8,9 +8,10 @@ import torch
 import torch.nn as nn
 import torchaudio
 from torch import Tensor
+import pandas as pd
+import librosa
+from torch.utils.data import Dataset
 
-from dataloader.voxceleb1 import VoxCeleb1Identification, VoxCeleb1Verification
-from dataloader.iemocap import IEMOCAP
 
 HASH_DIVIDER = "_nohash_"
 EXCEPT_FOLDER = "_background_noise_"
@@ -72,3 +73,31 @@ class SpeechCommandDataset(torchaudio.datasets.SPEECHCOMMANDS):
             os.makedirs(os.path.dirname(new_path))
 
         return new_path
+
+
+
+class ESC_Dataset(Dataset):
+    def __init__(self, audio_path, meta_data:str='./esc50.csv', fold:list=[1, 2, 3, 4, 5]):
+        self.meta_data = pd.read_csv(meta_data) # esc50.csv
+        self.fold = fold # [1, 2, 3, 4, 5]
+        self.audio_path = audio_path # .../esc-50/resample
+
+        # set dataset using the fold
+        self.meta_data = self.meta_data.loc[self.meta_data['fold'].isin(self.fold)] 
+
+        
+        print(f"fold: {self.fold}")
+        print(f"dataset length: {len(self.meta_data)}")
+        
+        # reset index
+        self.meta_data.reset_index(drop = True, inplace=True)
+
+    def __getitem__(self, index):
+        name = self.meta_data.loc[index, 'filename']
+        audio, sr = torchaudio.load(os.path.join(self.audio_path, name)) # 
+        y = self.meta_data.loc[index, 'target']
+
+        return audio, y
+
+    def __len__(self):
+        return len(self.meta_data)
