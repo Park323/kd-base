@@ -3,7 +3,7 @@ import os.path as osp
 import yaml
 import argparse
 
-TASKS = ['KWS','ASV','IC']
+TASKS = ['ESC-50','SpeechCommandsV2']
 
 if __name__ == "__main__":
     ## Parse arguments

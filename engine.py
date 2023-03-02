@@ -1,6 +1,5 @@
 import pytorch_lightning as pl
 import torch
-from models.tasks.utils import vector_quantizer, _shrink
 
 
 def load_engine(engine_type:str, *args, **kwargs)->pl.LightningModule:
@@ -23,58 +22,15 @@ def acc_calculate(step_outputs:dict, name:str='val'):
     acc = correct_score/total_size
     return name+'_ACC', acc*100
 
-def slot_acc_step(y_hat, y):
-    # slot1: 6 /slot2: 14 /slot3: 4
-    slot_start = 0
-    slot_sizes = [6, 14, 4]
-    preds = list()
-    for size in slot_sizes:
-        preds.append(y_hat[:,slot_start:slot_start+size].argmax(-1))
-        slot_start += size
-    preds = torch.stack(preds, dim=-1)
-    correct = (preds == y).prod(1).sum().item()
-    size = y.shape[0]
-    return {'correct': correct, 'size': size}
-
-def eer_step(y_hat, y):
-    return {'label': y, 'sim':y_hat}
-
-def eer_calculate(step_outputs:dict, name:str='val'):
-    import numpy as np
-    from sklearn.metrics import roc_curve
-    from scipy.optimize import brentq
-    from scipy.interpolate import interp1d
-    labels = torch.cat([dic['label'] for dic in step_outputs])
-    scores = torch.cat([dic['sim'] for dic in step_outputs])
-    labels = labels.detach().cpu()
-    scores = scores.detach().cpu()
-    fpr, tpr, thresholds = roc_curve(labels, scores, pos_label=1)
-    eer = brentq(lambda x : 1. - x - interp1d(fpr, tpr)(x), 0., 1.)
-    thresh = interp1d(fpr, thresholds)(eer)
-    return name+'_EER', eer*100
-
 def test_loss_switch(func, metric:str):
     # Switch loss function, only for evaluation
-    from loss.cosine_emb import loss_function as cos_loss
-    
-    if metric == "eer":
-        return cos_loss
-    else:
-        return func
+    return func
 
 MetricFuncs = dict(
     acc=dict(
         step_func=acc_step,
         epoch_func=acc_calculate
     ),
-    slot_acc=dict(
-        step_func=slot_acc_step,
-        epoch_func=acc_calculate
-    ),
-    eer=dict(
-        step_func=eer_step,
-        epoch_func=eer_calculate
-    )
 )
 
 

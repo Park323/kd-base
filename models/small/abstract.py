@@ -12,7 +12,3 @@ class SmallModel(nn.Module, ABC):
     @abstractmethod
     def forward(self, inputs, input_lengths=None) -> Tensor:
         pass
-
-    @abstractmethod
-    def predict(self, inputs, input_lengths=None) -> Union[int, Tensor]:
-        pass
