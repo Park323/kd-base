@@ -1,8 +1,8 @@
-Null0: &result_dir ./results/kd_kws
+Null0: &result_dir ./results/hts_kws
 Null1: &ext wav
 
 Null2: &data_name speechcommands
-Null3: &root data
+Null3: &root /home/nas3/user/jeonko/spc_embedding/data
 Null4: &folder SpeechCommands
 Null5: &url speech_commands_v0.02
 

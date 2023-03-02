@@ -9,8 +9,6 @@ import torch.nn as nn
 import torchaudio
 from torch import Tensor
 
-from dataloader.voxceleb1 import VoxCeleb1Identification, VoxCeleb1Verification
-from dataloader.iemocap import IEMOCAP
 
 HASH_DIVIDER = "_nohash_"
 EXCEPT_FOLDER = "_background_noise_"
@@ -72,3 +70,11 @@ class SpeechCommandDataset(torchaudio.datasets.SPEECHCOMMANDS):
             os.makedirs(os.path.dirname(new_path))
 
         return new_path
+
+def _load_list(root, *filenames):
+    output = []
+    for filename in filenames:
+        filepath = os.path.join(root, filename)
+        with open(filepath) as fileobj:
+            output += [os.path.normpath(os.path.join(root, line.strip())) for line in fileobj]
+    return output

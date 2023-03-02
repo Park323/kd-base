@@ -19,7 +19,3 @@ class CumbersomeModel(nn.Module, ABC):
     @abstractmethod
     def extract_intermediate(self, inputs, input_lengths=None) -> Tensor:
         pass
-
-    @abstractmethod
-    def predict(self, inputs, input_lengths=None) -> Union[int, Tensor]:
-        pass

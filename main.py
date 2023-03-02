@@ -13,7 +13,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.profiler import SimpleProfiler, AdvancedProfiler, PyTorchProfiler, XLAProfiler
 
-from engine import SpeechModel, load_engine
+from engine import TrainEngine, load_engine
 
 PROFILERS = {
     "simple": SimpleProfiler,
@@ -139,7 +139,7 @@ def test():
     scheduler = scheduler(optimizer, **config['scheduler_config'])
 
     # ⚡⚡  3. Load model
-    model = SpeechModel.load_from_checkpoint(model = model, optimizer=optimizer, loss_function=loss_function, scheduler=scheduler, checkpoint_path = config['resume_checkpoint'], **config.get('task_config', dict())) 
+    model = TrainEngine.load_from_checkpoint(model = model, optimizer=optimizer, loss_function=loss_function, scheduler=scheduler, checkpoint_path = config['resume_checkpoint'], **config.get('task_config', dict())) 
 
     # ⚡⚡ 4. LightningModule
     trainer = pl.Trainer(accelerator=config['accelerator'], gpus = config['devices'])
