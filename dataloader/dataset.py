@@ -8,12 +8,16 @@ import torch
 import torch.nn as nn
 import torchaudio
 from torch import Tensor
+import pandas as pd
+import librosa
+from torch.utils.data import Dataset
 
 
 HASH_DIVIDER = "_nohash_"
 EXCEPT_FOLDER = "_background_noise_"
 DATA_LIST = [
     "speechcommands",
+    "esc50"
 ]
 
 # Keyword Spotting
@@ -78,3 +82,36 @@ def _load_list(root, *filenames):
         with open(filepath) as fileobj:
             output += [os.path.normpath(os.path.join(root, line.strip())) for line in fileobj]
     return output
+
+
+class ESC50(Dataset):
+    def __init__(self, root, fold:list=[1, 2, 3, 4, 5]):
+        self.root = root # data/esc_50
+        self.fold = fold # [1, 2, 3, 4, 5]
+
+        # set resampled audio path
+        self.audio_path = os.path.join(self.root, 'resample')
+        sub_path = os.path.join('raw', 'ESC-50-master', 'meta', 'esc50.csv')
+
+        # set meta data
+        self.meta_data_path = os.path.join(self.root, sub_path)
+        self.meta_data = pd.read_csv(self.meta_data_path) # esc50.csv
+        
+        # set dataset using the fold
+        self.meta_data = self.meta_data.loc[self.meta_data['fold'].isin(self.fold)] 
+        
+        print(f"fold: {self.fold}")
+        print(f"dataset length: {len(self.meta_data)}")
+        
+        # reset index
+        self.meta_data.reset_index(drop = True, inplace=True)
+
+    def __getitem__(self, index):
+        name = self.meta_data.loc[index, 'filename']
+        audio, _ = torchaudio.load(os.path.join(self.audio_path, name)) # [1, audio_length]
+        y = self.meta_data.loc[index, 'target']
+
+        return audio, y
+
+    def __len__(self):
+        return len(self.meta_data)
