@@ -35,7 +35,7 @@ MetricFuncs = dict(
 
 
 class TrainEngine(pl.LightningModule):
-    def __init__(self, model, loss_function, optimizer, scheduler, metric='acc', method = 'conv_feature', **kwargs):
+    def __init__(self, model, loss_function, optimizer, scheduler, metric='acc', **kwargs):
         super().__init__()
         # ⚡ model
         self.model = model
@@ -59,13 +59,12 @@ class TrainEngine(pl.LightningModule):
 
         # custom
         self.metric = metric
-        self.method = method # 'conv_feature' or 'transformer_feature' or 'wav'
 
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx): # batch : (tensor[B, T], data_length, label)
 
-        x = batch[:-1] # (Input, Input_lengths) or (Input, Input_vq_indices, Input_lengths)
-        y = batch[-1]
+        x = batch[:-1] # (tensor[B, T], data_length)
+        y = batch[-1] # label
         # preprocess
         
         # inference
