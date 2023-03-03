@@ -404,7 +404,7 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
         ape (bool): If True, add absolute position embedding to the patch embedding. Default: False
         patch_norm (bool): If True, add normalization after patch embedding. Default: True
         use_checkpoint (bool): Whether to use checkpointing to save memory. Default: False
-        config (module): The configuration Module from config.py
+        config (module): The configuration Module from config['py
     """
 
     def __init__(self, spec_size=256, patch_size=4, patch_stride=(4,4), 
@@ -446,7 +446,7 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
         self.use_checkpoint = use_checkpoint
 
         #  process mel-spec ; used only once
-        self.freq_ratio = self.spec_size // self.config.mel_bins
+        self.freq_ratio = self.spec_size // self.config['mel_bins']
         window = 'hann'
         center = True
         pad_mode = 'reflect'
@@ -455,17 +455,17 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
         top_db = None
         self.interpolate_ratio = 32     # Downsampled ratio
         # Spectrogram extractor
-        self.spectrogram_extractor = Spectrogram(n_fft=config.window_size, hop_length=config.hop_size, 
-            win_length=config.window_size, window=window, center=center, pad_mode=pad_mode, 
+        self.spectrogram_extractor = Spectrogram(n_fft=config['window_size'], hop_length=config['hop_size'],
+            win_length=config['window_size'], window=window, center=center, pad_mode=pad_mode, 
             freeze_parameters=True)
         # Logmel feature extractor
-        self.logmel_extractor = LogmelFilterBank(sr=config.sample_rate, n_fft=config.window_size, 
-            n_mels=config.mel_bins, fmin=config.fmin, fmax=config.fmax, ref=ref, amin=amin, top_db=top_db, 
+        self.logmel_extractor = LogmelFilterBank(sr=config['sample_rate'], n_fft=config['window_size'], 
+            n_mels=config['mel_bins'], fmin=config['fmin'], fmax=config['fmax'], ref=ref, amin=amin, top_db=top_db, 
             freeze_parameters=True)
         # Spec augmenter
         self.spec_augmenter = SpecAugmentation(time_drop_width=64, time_stripes_num=2, 
             freq_drop_width=8, freq_stripes_num=2) # 2 2
-        self.bn0 = nn.BatchNorm2d(self.config.mel_bins)
+        self.bn0 = nn.BatchNorm2d(self.config['mel_bins'])
 
 
         # split spctrogram into non-overlapping patches
@@ -507,7 +507,7 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
             self.layers.append(layer)
 
         # A deprecated optimization for using a hierarchical output from different blocks
-        # if self.config.htsat_hier_output:
+        # if self.config['htsat_hier_output:
         #     self.norm = nn.ModuleList(
         #         [self.norm_layer(
         #             min(
@@ -523,12 +523,12 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
         self.maxpool = nn.AdaptiveMaxPool1d(1)
         
         # A deprecated optimization for using the max value instead of average value
-        # if self.config.htsat_use_max:
+        # if self.config['htsat_use_max:
         #     self.a_avgpool = nn.AvgPool1d(kernel_size=3, stride=1, padding=1)
         #     self.a_maxpool = nn.MaxPool1d(kernel_size=3, stride=1, padding=1)
 
-        if self.config.enable_tscam:
-            # if self.config.htsat_hier_output:
+        if self.config['enable_tscam']:
+            # if self.config['htsat_hier_output:
             #     self.tscam_conv = nn.ModuleList()
             #     for i in range(len(self.depths)):
             #         zoom_ratio = 2 ** min(len(self.depths) - 1, i + 1)
@@ -581,7 +581,7 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
 
     def forward_features(self, x):
         # A deprecated optimization for using a hierarchical output from different blocks
-        # if self.config.htsat_hier_output:
+        # if self.config['htsat_hier_output:
         #     hier_x = []
         #     hier_attn = []
 
@@ -593,13 +593,13 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
         for i, layer in enumerate(self.layers):
             x, attn = layer(x)
             # A deprecated optimization for using a hierarchical output from different blocks
-            # if self.config.htsat_hier_output:
+            # if self.config['htsat_hier_output:
             #     hier_x.append(x)
             #     if i == len(self.layers) - 1:
             #         hier_attn.append(attn)
 
         # A deprecated optimization for using a hierarchical output from different blocks
-        # if self.config.htsat_hier_output:
+        # if self.config['htsat_hier_output:
         #     hxs = []
         #     fphxs = []
         #     for i in range(len(hier_x)):
@@ -631,7 +631,7 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
         #         'clipwise_output': torch.sigmoid(hxs)}
         #     return output_dict
 
-        if self.config.enable_tscam:
+        if self.config['enable_tscam']:
             # for x
             x = self.norm(x)
             B, N, C = x.shape
@@ -649,7 +649,7 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
             latent_output = torch.flatten(latent_output, 1)
 
             # display the attention map, if needed
-            if self.config.htsat_attn_heatmap:
+            if self.config['htsat_attn_heatmap']:
                 # for attn
                 attn = torch.mean(attn, dim = 1)
                 attn = torch.mean(attn, dim = 1)
@@ -667,18 +667,18 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
             x = torch.flatten(x, 2) # B, C, T
             
             # A deprecated optimization for using the max value instead of average value
-            # if self.config.htsat_use_max:
+            # if self.config['htsat_use_max:
             #     x1 = self.a_maxpool(x)
             #     x2 = self.a_avgpool(x)
             #     x = x1 + x2
 
-            if self.config.htsat_attn_heatmap:
+            if self.config['htsat_attn_heatmap']:
                 fpx = interpolate(torch.sigmoid(x).permute(0,2,1).contiguous() * attn, 8 * self.patch_stride[1]) 
             else: 
                 fpx = interpolate(torch.sigmoid(x).permute(0,2,1).contiguous(), 8 * self.patch_stride[1]) 
             
             # A deprecated optimization for using the max value instead of average value
-            # if self.config.htsat_use_max:
+            # if self.config['htsat_use_max:
             #     x1 = self.avgpool(x)
             #     x2 = self.maxpool(x)
             #     x = x1 + x2
@@ -686,7 +686,7 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
             x = self.avgpool(x)
             x = torch.flatten(x, 1)
 
-            if self.config.loss_type == "clip_ce":
+            if self.config['loss_type'] == "clip_ce":
                 output_dict = {
                     'framewise_output': fpx, # already sigmoided
                     'clipwise_output': x,
@@ -785,7 +785,7 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
             x = x.repeat(repeats=(1,1,repeat_ratio,1))
             x = self.reshape_wav2img(x)
             output_dict = self.forward_features(x)
-        elif self.config.enable_repeat_mode:
+        elif self.config['enable_repeat_mode']:
             if self.training:
                 cur_pos = random.randint(0, (self.freq_ratio - 1) * self.spec_size - 1)
                 x = self.repeat_wat2img(x, cur_pos)
@@ -846,3 +846,11 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
 
     def extract_intermediate(self, inputs, input_lengths=None) -> Tensor:
         raise NotImplementedError
+    
+
+class WrappedHTSAT(HTSAT_Swin_Transformer):
+    def forward(self, x: torch.Tensor, mixup_lambda=None, infer_mode=False):
+        # NOTE(JK) Squeezing Added for matching dim size
+        x.squeeze_(1)
+        output_dict = super().forward(x, mixup_lambda, infer_mode) # key : framewise_output, clipwise_output, latent_output
+        return output_dict['clipwise_output']

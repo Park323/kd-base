@@ -9,6 +9,9 @@ from torch import Tensor
 from .small import SmallModel
 from .cumbersome import CumbersomeModel
 
+from loss.contrastive import loss_function as contrastive_loss
+from loss.softmax import loss_function as ce_loss
+
 
 class AbsKnowledgeDistiilation(nn.Module, ABC):
     def __init__(self, cumbersome:str, cumbersome_config:dict, small:str, small_config:dict) -> None:
@@ -26,18 +29,25 @@ class AbsKnowledgeDistiilation(nn.Module, ABC):
         return cumbersome_outptus, small_outptus
     
     @abstractmethod
-    def loss_function(self, cumbersome_outputs:Tensor, small_outputs:Tensor, targets:Tensor)->Tensor:
+    def loss_function(self, outputs:Tuple[Tensor,Tensor], targets: Tensor) -> Tensor:
         return None
     
 
 class KnowledgeDistillation(AbsKnowledgeDistiilation):
-    def loss_function(self, cumbersome_outputs: Tensor, small_outputs: Tensor, targets: Tensor) -> Tensor:
-        return None
+    def __init__(self, cumbersome: str, cumbersome_config: dict, small: str, small_config: dict, a:float=0.5) -> None:
+        super().__init__(cumbersome, cumbersome_config, small, small_config)
+        self.a = a
+
+    def loss_function(self, outputs:Tuple[Tensor,Tensor], targets: Tensor) -> Tensor:
+        cumbersome_outputs, small_outputs = outputs
+        loss_cot = contrastive_loss(cumbersome_outputs, small_outputs)
+        loss_ce = ce_loss(small_outputs, targets)
+        return self.a * loss_cot + (1-self.a) * loss_ce
     
 
 class TemporalKnowedgeDistillation(AbsKnowledgeDistiilation):
     def forward(self, *args, **kwargs) -> Tuple[Tensor, Tensor]:
         return super().forward(*args, **kwargs)
     
-    def loss_function(self, cumbersome_outputs: Tensor, small_outputs: Tensor, targets: Tensor) -> Tensor:
-        return super().loss_function(cumbersome_outputs, small_outputs, targets)
+    def loss_function(self, outputs: Tuple[Tensor, Tensor], targets: Tensor) -> Tensor:
+        return super().loss_function(outputs, targets)
