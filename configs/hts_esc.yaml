@@ -1,13 +1,13 @@
 Null0: &result_dir ./results/hts_kws
 Null1: &ext wav
 
-Null2: &data_name speechcommands
-Null3: &root /home/nas3/user/jeonko/spc_embedding/data
-Null4: &folder SpeechCommands
-Null5: &url speech_commands_v0.02
+Null2: &data_name esc50
+Null3: &root data/esc50
+Null4: &train_fold [2, 3, 4, 5]
+Null5: &test_fold [1]
 
-Null7: &input_dim 1
-Null8: &n_classes 35
+Null6: &input_dim 1
+Null7: &n_classes 35
 
 # 1. DataLoader
 training_dataset_config:
@@ -39,7 +39,7 @@ test_loader_config:
   shuffle: False
 
 
-batch_size: 128
+batch_size: 512
 num_workers: 4
 
 
@@ -58,14 +58,14 @@ model_config:
 
   config:
     # for signal processing
-    sample_rate: 16000 # 16000 for scv2, 32000 for audioset and esc-50
-    clip_samples: 16000 # sample_rate * 10 # audio_set 10-sec clip
+    sample_rate: 32000 # 16000 for scv2, 32000 for audioset and esc-50
+    clip_samples: 320000 # sample_rate * 10 # audio_set 10-sec clip
     window_size: 1024
-    hop_size: 160 # 160 for scv2, 320 for audioset and esc-50
+    hop_size: 320 # 160 for scv2, 320 for audioset and esc-50
     mel_bins: 64
     fmin: 50
     fmax: 14000
-    shift_max: 8000 # int(clip_samples * 0.5)
+    shift_max: 160000 # int(clip_samples * 0.5)
 
     enable_tscam: True
     enable_repeat_mode: False
