@@ -55,7 +55,9 @@ class SpeechCommandDataset(torchaudio.datasets.SPEECHCOMMANDS):
             self._walker = [w for w in walker if HASH_DIVIDER in w and EXCEPT_FOLDER not in w]
         
     def __getitem__(self, n: int) -> Tuple[Tensor, int]:
-        return super().__getitem__(n)[:2] #Tuple[Tensor, int, str, str, int]
+        wav, sr, label, _, _ = super().__getitem__(n)
+        label:int = self.label2index(label)
+        return wav, label
 
     def get_metadata(self, index):
         return self._walker[index]
