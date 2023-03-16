@@ -1,0 +1,90 @@
+Null2: &data_name esc50
+Null3: &root ./data/esc50
+Null4: &train_fold [2, 3, 4, 5]
+Null5: &test_fold [1]
+Null6: &sampling_rate 16000
+
+# 1. DataLoader
+training_dataset_config:
+  data_name: *data_name
+  root: *root
+  fold: *train_fold
+  resample: *sampling_rate
+train_loader_config:
+  shuffle: True
+validation_dataset_config:
+  data_name: *data_name
+  root: *root
+  fold: *test_fold
+  resample: *sampling_rate
+validation_loader_config:
+  shuffle: False
+test_dataset_config:
+  data_name: *data_name
+  root: *root
+  fold: *test_fold
+  resample: *sampling_rate
+test_loader_config:
+  shuffle: False
+
+
+batch_size: 32
+num_workers: 8
+
+
+# 2. Model
+model: ScratchModel
+model_config:
+  small_model: ResNetSE34L
+  small_config:
+    n_mels: 40
+    layers: [3, 4, 6, 3]
+    num_filters : [16, 32, 64, 128]
+    num_classes: 50
+    sampling_rate: *sampling_rate
+
+task_config:
+  metric: 'acc'
+  sample_input_size: 10 40 768
+
+
+# 3. Optimizer
+optimizer: adamw
+optimizer_config:
+  lr: 0.0002
+  weight_decay: 0.005
+
+
+# 4. LossFunction
+loss: softmax
+
+
+# 5. Scheduler
+scheduler: reduce_lr_onplateu
+scheduler_config:
+  factor: 0.5
+  patience: 5
+  min_lr: 0.0000000001
+  threshold: 0.0001
+
+
+# 6. Trainer
+default_root_dir: ./results/fastresnet_scratch_fold1_16000
+profiler: null #advanced
+max_epoch: 200
+devices: -1
+accelerator: cuda
+num_sanity_val_steps: 2
+
+
+# 7. Checkpoint
+resume_checkpoint: null
+checkpoint_config:
+  save_top_k: 200
+  monitor: "val_ACC"
+  mode: "max"
+  filename: "esc-{epoch:02d}-{val_loss:.2f}-{val_ACC:02.2f}"
+
+
+# 8. Random Seed
+random_seed: 2301235

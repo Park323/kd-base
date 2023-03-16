@@ -113,6 +113,9 @@ class TrainEngine(pl.LightningModule):
     def validation_epoch_end(self, validation_step_outputs):
         name, value = MetricFuncs[self.metric]['epoch_func'](validation_step_outputs, name='val')
         self.log(name, value, on_epoch = True, prog_bar=True, sync_dist=True)
+        
+        lr =  self.optimizers().param_groups[0]['lr']
+        self.log("lr", lr, on_epoch=True, logger=True, prog_bar=True)
 
     def forward(self, x):
         y_hat = x
