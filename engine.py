@@ -14,6 +14,7 @@ def load_engine(engine_type:str, *args, **kwargs)->pl.LightningModule:
     return Engine_cls(*args, **kwargs)
 
 def acc_step(y_hat, y):
+    if isinstance(y_hat, tuple): y_hat = y_hat[0] # Get small model's output
     correct = (y_hat.argmax(1) == y).type(torch.float).sum().item()
     size = y.shape[0]
     return {'correct': correct, 'size': size}
