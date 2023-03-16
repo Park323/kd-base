@@ -43,7 +43,7 @@ class SpeechCommandDataset(torchaudio.datasets.SPEECHCOMMANDS):
         if subset == "validation": pass
         elif subset == "testing": pass
         elif subset == "training":
-            excludes = set(_load_list(self._path, "validation_list.txt", "testing_list.txt"))
+            excludes = set(SpeechCommandDataset._load_list(self._path, "validation_list.txt", "testing_list.txt"))
             walker = sorted(str(p) for p in Path(self._path).glob(f"*/*.{self.ext}"))
             self._walker = [
                 w
@@ -59,9 +59,6 @@ class SpeechCommandDataset(torchaudio.datasets.SPEECHCOMMANDS):
         label:int = self.label2index(label)
         return wav, label
 
-    def get_metadata(self, index):
-        return self._walker[index]
-
     def label2index(self, label):
         return self.CLASS_DICT[label]
 
@@ -76,14 +73,16 @@ class SpeechCommandDataset(torchaudio.datasets.SPEECHCOMMANDS):
             os.makedirs(os.path.dirname(new_path))
 
         return new_path
+    
+    @staticmethod
+    def _load_list(root, *filenames):
+        output = []
+        for filename in filenames:
+            filepath = os.path.join(root, filename)
+            with open(filepath) as fileobj:
+                output += [os.path.normpath(os.path.join(root, line.strip())) for line in fileobj]
+        return output
 
-def _load_list(root, *filenames):
-    output = []
-    for filename in filenames:
-        filepath = os.path.join(root, filename)
-        with open(filepath) as fileobj:
-            output += [os.path.normpath(os.path.join(root, line.strip())) for line in fileobj]
-    return output
 
 
 class ESC50(Dataset):
@@ -110,7 +109,7 @@ class ESC50(Dataset):
 
     def __getitem__(self, index):
         name = self.meta_data.loc[index, 'filename']
-        audio, _ = torchaudio.load(os.path.join(self.audio_path, name)) # [1, audio_length]
+        audio, sr = torchaudio.load(os.path.join(self.audio_path, name)) # [1, audio_length]
         y = self.meta_data.loc[index, 'target']
 
         return audio, y

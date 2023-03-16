@@ -55,6 +55,7 @@ model_config:
   patch_stride: [4,4]
   num_heads: [4,8,16,32]
   depths: [2,2,6,2]
+  expand_length: 1 # 10
 
   config:
     # for signal processing
@@ -81,7 +82,7 @@ task_config:
 # 3. Optimizer
 optimizer: adam
 optimizer_config:
-  lr: 0.001
+  lr: 0.0001
   weight_decay: 0.0001
 
 
@@ -100,14 +101,14 @@ scheduler_config:
 # 6. Trainer
 default_root_dir: *result_dir
 profiler: null #advanced
-max_epoch: 1
+max_epoch: 100
 devices: -1
 accelerator: gpu
 num_sanity_val_steps: 2
 
 
 # 7. Checkpoint
-resume_checkpoint: null
+resume_checkpoint: "checkpoint/HTSAT_SCV2_Saved_1.ckpt"
 checkpoint_config:
   save_top_k: 5
   monitor: "val_ACC"
