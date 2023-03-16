@@ -1,11 +1,11 @@
 import argparse
 import yaml
-import torch
 import sys
 import importlib
 import warnings
 warnings.filterwarnings('ignore')
 
+import torch
 from torch.utils.data import DataLoader
 
 import lightning_fabric as lf
@@ -39,7 +39,7 @@ def train(config):
 
     test_dataloader = DataLoader(
             dataset = test_dataset,
-            batch_size=1,
+            batch_size=config['batch_size'],
             num_workers=config['num_workers'],
             pin_memory=False,
             collate_fn=test_collate_fn,
@@ -60,7 +60,7 @@ def train(config):
 
 
     # ⚡⚡  3. Set 'engine' for training/validation and 'Trainer' 
-    model = load_engine('engine_type', model = model, optimizer=optimizer, loss_function=loss_function, scheduler=scheduler, **config.get('task_config', dict()))
+    engine = load_engine('engine_type', model = model, optimizer=optimizer, loss_function=loss_function, scheduler=scheduler, **config.get('task_config', dict()))
     
     
     # ⚡⚡ 4. Init callbacks
@@ -82,7 +82,7 @@ def train(config):
 
     # ⚡⚡ 5. LightningModule
     trainer = pl.Trainer(
-        deterministic=True, # Might make your system slower, but ensures reproducibility.
+        deterministic=False, # Might make your system slower, but ensures reproducibility.
         default_root_dir = config['default_root_dir'], #
         devices = config['devices'], #
         val_check_interval = 1.0, # Check val every n train epochs.
@@ -100,14 +100,22 @@ def train(config):
     if config['resume_checkpoint']  is not None:
         print("⚡")
         print(config['resume_checkpoint'] + "are loaded")
-        trainer.fit(model, train_dataloader, test_dataloader, ckpt_path=config['resume_checkpoint'])
+        if check_lightning_checkpoint(config['resume_checkpoint']):
+            print("Resume checkpoint by lightning")
+            trainer.fit(engine, train_dataloader, test_dataloader, ckpt_path=config['resume_checkpoint'])
+        else:
+            print("Resume checkpoint by torch")
+            states = torch.load(config['resume_checkpoint'])
+            engine.load_state_dict(states, strict=False)
+            # engine.freeze_parameters()
+            trainer.fit(engine, train_dataloader, test_dataloader)
     else:
         print("⚡⚡")
         print("no pre-trained weight are loaded")
-        trainer.fit(model, train_dataloader, test_dataloader)
+        trainer.fit(engine, train_dataloader, test_dataloader)
 
 
-def test():
+def test(config):
     print("test")
 
     # sets seeds for numpy, torch and python.random.    
@@ -127,7 +135,7 @@ def test():
         )
 
     # ⚡⚡ 2. Set 'Model', 'Loss', 'Optimizer', 'Scheduler'
-    model = importlib.import_module('models.head').__getattribute__(config['model'])
+    model = importlib.import_module('models').__getattribute__(config['model'])
     model =  model(**config['model_config'])
 
     optimizer = importlib.import_module("optimizer." + config['optimizer']).__getattribute__("Optimizer")
@@ -140,13 +148,19 @@ def test():
 
     # ⚡⚡  3. Load model
     model = TrainEngine.load_from_checkpoint(model = model, optimizer=optimizer, loss_function=loss_function, scheduler=scheduler, checkpoint_path = config['resume_checkpoint'], **config.get('task_config', dict())) 
+    # model = TrainEngine(model = model, optimizer=optimizer, loss_function=loss_function, scheduler=scheduler, **config.get('task_config', dict()))
+    # model.load_state_dict(torch.load(config['resume_checkpoint']))
 
     # ⚡⚡ 4. LightningModule
     trainer = pl.Trainer(accelerator=config['accelerator'], gpus = config['devices'])
 
     trainer.test(model, dataloaders=test_dataloader)
 
-    
+def check_lightning_checkpoint(resume_path:str):
+    ckpt = torch.load(resume_path)
+    return ckpt.get("pytorch-lightning_version", False)
+
+
 if __name__ == "__main__":
     ## Parse arguments
     parser = argparse.ArgumentParser(description = "Speaker verification with sequential module")

@@ -1,4 +1,4 @@
-Null0: &result_dir ./results/hts_kws
+Null0: &result_dir ./results/hts_esc
 Null1: &ext wav
 
 Null2: &data_name esc50
@@ -7,39 +7,30 @@ Null4: &train_fold [2, 3, 4, 5]
 Null5: &test_fold [1]
 
 Null6: &input_dim 1
-Null7: &n_classes 35
+Null7: &n_classes 50
 
 # 1. DataLoader
 training_dataset_config:
   data_name: *data_name
   root: *root
-  subset: 'training'
-  folder_in_archive: *folder
-  url: *url
-  ext: *ext
+  fold: *train_fold
 train_loader_config:
   shuffle: True
 validation_dataset_config:
   data_name: *data_name
   root: *root
-  subset: 'validation'
-  folder_in_archive: *folder
-  url: *url
-  ext: *ext
+  fold: *test_fold
 validation_loader_config:
   shuffle: False
 test_dataset_config:
   data_name: *data_name
   root: *root
-  subset: 'testing'
-  folder_in_archive: *folder
-  url: *url
-  ext: *ext
+  fold: *test_fold
 test_loader_config:
   shuffle: False
 
 
-batch_size: 512
+batch_size: 128
 num_workers: 4
 
 
@@ -55,6 +46,7 @@ model_config:
   patch_stride: [4,4]
   num_heads: [4,8,16,32]
   depths: [2,2,6,2]
+  expand_length: 1 # 2
 
   config:
     # for signal processing
@@ -81,7 +73,7 @@ task_config:
 # 3. Optimizer
 optimizer: adam
 optimizer_config:
-  lr: 0.001
+  lr: 0.0001
   weight_decay: 0.0001
 
 
@@ -92,22 +84,22 @@ loss: softmax
 # 5. Scheduler
 scheduler: steplr
 scheduler_config:
-  step_size: 50
-  gamma: 0.9
+  step_size: 10
+  gamma: 0.5
   last_epoch: -1
 
 
 # 6. Trainer
 default_root_dir: *result_dir
 profiler: null #advanced
-max_epoch: 1
+max_epoch: 100
 devices: -1
 accelerator: gpu
 num_sanity_val_steps: 2
 
 
 # 7. Checkpoint
-resume_checkpoint: null
+resume_checkpoint: "checkpoint/HTSAT_ESC_exp=1_fold=0_acc=0.970.ckpt"
 checkpoint_config:
   save_top_k: 5
   monitor: "val_ACC"

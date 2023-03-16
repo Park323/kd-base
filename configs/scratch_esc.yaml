@@ -1,8 +1,13 @@
+Null0: &result_dir ./results/hts_esc
+Null1: &ext wav
+
 Null2: &data_name esc50
 Null3: &root data/esc50
 Null4: &train_fold [2, 3, 4, 5]
 Null5: &test_fold [1]
-Null6: &sampling_rate 32000
+
+Null6: &input_dim 1
+Null7: &n_classes 50
 
 # 1. DataLoader
 training_dataset_config:
@@ -38,7 +43,7 @@ model_config:
     channels: [16, 24, 32, 48]
     channel_scale: 1
     num_classes: 50
-    sampling_rate: *sampling_rate
+    sampling_rate: 32000
 
 task_config:
   metric: 'acc'

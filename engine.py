@@ -1,3 +1,5 @@
+import logging
+from typing import Any, Mapping
 import pytorch_lightning as pl
 import torch
 
@@ -42,7 +44,7 @@ class TrainEngine(pl.LightningModule):
         print(self.model)
 
         # ⚡ loss 
-        self.loss_function = loss_function
+        self.loss_function = model.loss_function if hasattr(model, 'loss_function') else loss_function
 
         # ⚡ optimizer
         self.optimizer = optimizer
@@ -51,7 +53,7 @@ class TrainEngine(pl.LightningModule):
         self.scheduler = scheduler # **kwargs: **config['scheduler_config']
 
         # save hyperparameters
-        self.save_hyperparameters(ignore=['model'])
+        self.save_hyperparameters(ignore=['model', 'loss_function', 'optimizer', 'scheduler'])
 
         #⚡⚡⚡ debugging - print input output layer ⚡⚡⚡
         sample_size = tuple(map(int, kwargs['sample_input_size'].split())) if kwargs.get('sample_input_size', False) else (64,1,28,28)

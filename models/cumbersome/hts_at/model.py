@@ -20,7 +20,7 @@ from torchlibrosa.stft import Spectrogram, LogmelFilterBank
 from torchlibrosa.augmentation import SpecAugmentation
 
 from itertools import repeat
-from typing import List, Union
+from typing import Any, List, Mapping, Union
 from .layers import PatchEmbed, Mlp, DropPath, trunc_normal_, to_2tuple
 from .utils import do_mixup, interpolate
 
@@ -406,6 +406,12 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
         use_checkpoint (bool): Whether to use checkpointing to save memory. Default: False
         config (module): The configuration Module from config['py
     """
+    # def freeze_parameters(self)->None:
+    #     for name, p in self.named_parameters():
+    #         if not ('tscam_conv' in name or 'head' in name):
+    #             p.requires_grad_(False)
+    #         else:
+    #             print(f"parameter '{name}' will be trained.")
 
     def __init__(self, spec_size=256, patch_size=4, patch_stride=(4,4), 
                 in_chans=1, num_classes=527,
@@ -560,6 +566,8 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
             self.head = nn.Linear(self.num_features, num_classes) if num_classes > 0 else nn.Identity()
 
         self.apply(self._init_weights)
+
+        self.expand_length = kwargs.get('expand_length', 1)
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
@@ -765,6 +773,9 @@ class HTSAT_Swin_Transformer(CumbersomeModel):
         return x
 
     def forward(self, x: torch.Tensor, mixup_lambda = None, infer_mode = False):# out_feat_keys: List[str] = None):
+        if self.expand_length > 1:
+            x = torch.cat([x for _ in range(self.expand_length)], dim=1)
+
         x = self.spectrogram_extractor(x)   # (batch_size, 1, time_steps, freq_bins)
         x = self.logmel_extractor(x)    # (batch_size, 1, time_steps, mel_bins)
         
