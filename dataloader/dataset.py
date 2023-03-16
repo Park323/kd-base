@@ -55,9 +55,7 @@ class SpeechCommandDataset(torchaudio.datasets.SPEECHCOMMANDS):
             self._walker = [w for w in walker if HASH_DIVIDER in w and EXCEPT_FOLDER not in w]
         
     def __getitem__(self, n: int) -> Tuple[Tensor, int]:
-        wav, sr, label, _, _ = super().__getitem__(n)
-        label:int = self.label2index(label)
-        return wav, label
+        return super().__getitem__(n)[:2] #Tuple[Tensor, int, str, str, int]
 
     def get_metadata(self, index):
         return self._walker[index]
@@ -77,22 +75,16 @@ class SpeechCommandDataset(torchaudio.datasets.SPEECHCOMMANDS):
 
         return new_path
 
-def _load_list(root, *filenames):
-    output = []
-    for filename in filenames:
-        filepath = os.path.join(root, filename)
-        with open(filepath) as fileobj:
-            output += [os.path.normpath(os.path.join(root, line.strip())) for line in fileobj]
-    return output
 
 
 class ESC50(Dataset):
-    def __init__(self, root, fold:list=[1, 2, 3, 4, 5]):
+    def __init__(self, root, fold:list=[1, 2, 3, 4, 5], resample:int = 16000):
         self.root = root # data/esc_50
         self.fold = fold # [1, 2, 3, 4, 5]
 
         # set resampled audio path
-        self.audio_path = os.path.join(self.root, 'resample')
+        resample = 'resample_' + str(resample)
+        self.audio_path = os.path.join(self.root, resample)
         sub_path = os.path.join('raw', 'ESC-50-master', 'meta', 'esc50.csv')
 
         # set meta data
