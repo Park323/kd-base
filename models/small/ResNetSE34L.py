@@ -7,12 +7,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Parameter
 
-#! /usr/bin/python
-# -*- encoding: utf-8 -*-
-
-import torch
-import torch.nn as nn
-
 class SEBasicBlock(nn.Module):
     expansion = 1
 
