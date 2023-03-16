@@ -55,7 +55,8 @@ class SpeechCommandDataset(torchaudio.datasets.SPEECHCOMMANDS):
             self._walker = [w for w in walker if HASH_DIVIDER in w and EXCEPT_FOLDER not in w]
         
     def __getitem__(self, n: int) -> Tuple[Tensor, int]:
-        return super().__getitem__(n)[:2] #Tuple[Tensor, int, str, str, int]
+        label:int = self.label2index(super().__getitem__(n)[2])
+        return (super().__getitem__(n)[0], label)  #Tuple[Tensor, int, str, str, int]
 
     def label2index(self, label):
         return self.CLASS_DICT[label]
@@ -91,6 +92,7 @@ class ESC50(Dataset):
         # set resampled audio path
         resample = 'resample_' + str(resample)
         self.audio_path = os.path.join(self.root, resample)
+        print(self.audio_path)
         sub_path = os.path.join('raw', 'ESC-50-master', 'meta', 'esc50.csv')
 
         # set meta data
