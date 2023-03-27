@@ -6,6 +6,8 @@ Implementation of training various models with knowledge distillation.
 
 
 ## Getting Started
+### 0. Data prepare
+ - Run jupyter notebooks located in **dataprepare**
 
 ### 1. train
 ```
